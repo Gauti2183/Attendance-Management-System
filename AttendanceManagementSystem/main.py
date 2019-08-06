@@ -16,6 +16,8 @@ from PyQt5.QtWidgets import *
 import datetime
 import csvdata
 import os
+import time
+import pandas as pd
 from PyQt5.QtWidgets import QMessageBox
 
 import csv
@@ -26,15 +28,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
         self.setupUi(self)
-        self.pushButton.clicked.connect(self.set_name)
+        # self.pushButton_addmember.clicked.connect(self.set_name)
         self.comboBox.activated.connect(self.showcard)
         self.pushButton_2.clicked.connect(self.gettime)
+        self.pushButton_addMember.clicked.connect(self.addMember)
         self.timer = QTimer(self)
         self.count = 0
         self.timer.timeout.connect(self.card)
         self.startCount()
         for i in range(len(header)):
             self.tableWidget.setHorizontalHeaderItem(i, QTableWidgetItem(header[i]))
+        self.sysStatus = 0
+
+    def checkCardMember(self,memberNumber,sysStatus):
+        df = pd.read_csv('../data/key.csv')
+        return df[(df.ID == memberNumber)].index.tolist()
+
+    def addMember(self):
+        self.textEdit_State.setText("請感應卡片以增加成員")
+        aelf.sysStatus = 1
 
     def startCount(self):
         self.timer.start(5000)
@@ -138,22 +150,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.card()
 
     def card(self):
-        time = str(datetime.datetime.now())
+        timeAll = str(datetime.datetime.now())
 
-        time = time[0:16]
-        time_card = time[11:16]
-        hour = time[11:13]
+        timeAll = timeAll[0:16]
+        time_card = timeAll[11:16]
+        hour = timeAll[11:13]
 
-        day = time[8:10]
+        day = timeAll[8:10]
         if int(day) < 10:
-            day = time[9:10]
+            day = timeAll[9:10]
 
         test = get_ID.get_ID()
         #hour = 17
         for i in range(15):
             if test[i] == "1":
-                #print( str(i+1) + "card get")
-                datafile = str(i+1) + '.csv'
+                if not (os.path.isfile('../data/key.csv')):
+                    csvdata.resetKeyData()
+                memberIndex = self.checkCardMember(i+1,self.sysStatus)
+                if not memberIndex:
+                    self.textEdit_Status.setText("未知的卡片號碼\n請先加入卡片")
+                    return
+                else:
+                    df = pd.read_csv('../data/key.csv')
+                    memberIndexInt = memberIndex[0]
+                    self.textEdit_Status.setText("歡迎 " + df['Name'][memberIndexInt])
+
+                path = csvdata.getPath()
+                datafile = path +str(i+1) + '.csv'
                 if not (os.path.isfile(datafile)):
                     csvdata.resetdata(i+1)
                 reader = csvdata.readdata(i+1)
@@ -182,8 +205,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 csvdata.writedata(i+1, reader)
                 #self.tableWidget.setItem(1, 0, QTableWidgetItem(time_card))
 
-        fo = open("RawData.txt", "a")
-        fo.write(test + " " + time + '\n')
+        fo = open("../data/RawData.txt", "a")
+        fo.write(test + " " + timeAll + '\n')
         fo.close()
 
 

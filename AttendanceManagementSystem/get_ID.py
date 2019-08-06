@@ -7,10 +7,10 @@ Created on Mon Feb 19 15:03:04 2018
 """
 
 import requests
-url = 'http://192.168.1.241'
+url = 'http://192.168.1.7'
 def get_ID():
     try:
-        res = requests.get(url)
+        res = requests.get(url,timeout=0.5)
         return res.text
     except:
         return "Connection Filed"
