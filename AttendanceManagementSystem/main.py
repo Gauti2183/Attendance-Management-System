@@ -33,12 +33,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pushButton_2.clicked.connect(self.gettime)
         self.pushButton_addMember.clicked.connect(self.addMember)
         self.timer = QTimer(self)
+        self.timer_time = QTimer(self)
         self.count = 0
         self.timer.timeout.connect(self.card)
+        self.timer_time.timeout.connect(self.setTime)
         self.startCount()
         for i in range(len(header)):
             self.tableWidget.setHorizontalHeaderItem(i, QTableWidgetItem(header[i]))
         self.sysStatus = 0
+
+    def setTime(self):
+        self.dateTimeEdit.setDateTime(QDateTime.currentDateTime())
 
     def checkCardMember(self,memberNumber,sysStatus):
         df = pd.read_csv('../data/key.csv')
@@ -50,6 +55,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def startCount(self):
         self.timer.start(5000)
+        self.timer_time.start(1000)
 
     def timetostring(self,stime):
         if len(stime) != 1:
